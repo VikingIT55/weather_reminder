@@ -1,0 +1,14 @@
+FROM python:3.13
+
+ENV PORT=8000
+
+WORKDIR /DjangoWeatherReminder
+COPY . .
+
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+ENV CELERY_BROKER_URL=redis://redis:6379/0
+ENV CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+CMD ["celery", "-A", "weather_api", "worker", "--loglevel=info"]

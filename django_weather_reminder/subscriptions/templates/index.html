@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notifications about weather</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <h1>Notifications about weather</h1>
+    <form action="{% url 'subscriptions:subscriptions-list' %}" method="POST">
+        {% csrf_token %}
+        <label for="city">Choose city:</label>
+        <select id="city" name="city" required>
+            {% for city in cities %}
+                <option value="{{city.id}}">{{ city.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="period">Period:</label>
+        <select id="period" name="period" required>
+            <option value="1">1 Hour</option>
+            <option value="3">3 Hours</option>
+            <option value="6">6 Hours</option>
+            <option value="12">12 Hours</option>
+        </select>
+
+        <label for="delivery_method">Delivery method:</label>
+        <select id="delivery_method" name="delivery_method" required>
+            {% for value, label in delivery_method %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+    <button type="submit">Subscription</button>
+    </form>
+
+    <h2>Your subscriptions:</h2>
+    <ul>
+        {% for sub in subscriptions %}
+            <li>{{ sub.city.name }} – {{ sub.user.email }} last notified: {{ sub.last_notified }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Delete subscriptions:</h3>
+    <form action="{% url 'subscriptions:delete-subscription' %}" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="_method" value="DELETE">
+    <select id="sub" name="sub_id" required>
+        {% for sub in subscriptions %}
+            <option value="{{ sub.id }}">{{ sub.city.name }} – {{ sub.last_notified}} - {{ sub.period.value}}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Delete</button>
+    </form>
+
+    <form action="{% url 'subscriptions:trigger-notifications' %}" method="get">
+        <button type="submit">Get Notification</button>
+    </form>
+
+    <form method="POST" action="{% url 'users:logout' %}">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+    </form>
+
+
+
+</body>
+</html>

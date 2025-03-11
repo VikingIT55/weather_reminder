@@ -1,0 +1,64 @@
+
+services:
+  # Сервіс для Django
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: django
+    command: gunicorn weather_reminder.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/DjangoWeatherReminder
+      - ./db.sqlite3:/DjangoWeatherReminder/db.sqlite3
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: always
+
+
+
+    # Сервіс для celery-worker
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery_worker
+    container_name: celery-worker
+    command: celery -A weather_api worker --loglevel=info
+    volumes:
+      - .:/DjangoWeatherReminder
+      - ./db.sqlite3:/DjangoWeatherReminder/db.sqlite3
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: always
+
+
+
+  # Сервіс для celery-beat
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery_beat
+    container_name: celery-beat
+    command: celery -A weather_api beat --loglevel=info
+    volumes:
+      - .:/DjangoWeatherReminder
+      - ./db.sqlite3:/DjangoWeatherReminder/db.sqlite3
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - celery-worker
+    restart: always
+
+
+  # Сервіс для Redis
+  redis:
+    image: redis:7.0
+    container_name: redis
+    ports:
+      - "6379:6379"
